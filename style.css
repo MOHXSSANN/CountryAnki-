@@ -136,9 +136,9 @@ body {
 /* Mode Select */
 .mode-select {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
-  max-width: 700px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  max-width: 900px;
   margin-bottom: 32px;
 }
 
@@ -146,8 +146,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 24px 16px;
+  padding: 20px 12px;
+  min-height: 100px;
   background: var(--bg-card);
   border: 2px solid var(--border);
   border-radius: var(--radius);
@@ -312,20 +314,34 @@ body {
 #game-screen {
   max-width: 600px;
   width: 100%;
+  justify-content: flex-start;
 }
 
 .game-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 44px 1fr;
   align-items: center;
   width: 100%;
   margin-bottom: 24px;
+  gap: 16px;
+}
+
+.game-back-btn {
+  position: static;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-stats {
   display: flex;
   gap: 20px;
   font-size: 0.9rem;
+  justify-content: center;
+  min-width: 0;
 }
 
 .game-stat {
@@ -335,6 +351,15 @@ body {
 #game-timer {
   font-family: 'JetBrains Mono', monospace;
   color: var(--warning);
+}
+
+.game-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .flag-container {
@@ -399,6 +424,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   width: 100%;
+  max-width: 500px;
 }
 
 .option-btn {
@@ -439,6 +465,7 @@ body {
   display: flex;
   gap: 12px;
   width: 100%;
+  max-width: 500px;
   margin-top: 24px;
 }
 
@@ -542,6 +569,11 @@ body {
 
 .overlay.active {
   display: flex;
+  pointer-events: auto;
+}
+
+.overlay:not(.active) {
+  pointer-events: none;
 }
 
 .result-card {
@@ -645,6 +677,12 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 900px) {
+  .mode-select {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 600px) {
   .stats-bar {
     flex-wrap: wrap;
@@ -658,9 +696,11 @@ body {
 
   .options-container {
     grid-template-columns: 1fr;
+    max-width: 100%;
   }
 
   .game-stats {
     flex-wrap: wrap;
+    justify-content: center;
   }
 }

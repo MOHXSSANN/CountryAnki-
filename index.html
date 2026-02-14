@@ -101,7 +101,7 @@
     <!-- Game Screen -->
     <div id="game-screen" class="screen">
       <div class="game-header">
-        <button class="back-btn" id="game-back">✕</button>
+        <button class="back-btn game-back-btn" id="game-back">✕</button>
         <div class="game-stats">
           <span class="game-stat" id="game-score">Score: 0</span>
           <span class="game-stat" id="game-streak">Streak: 0</span>
@@ -109,6 +109,7 @@
         </div>
       </div>
 
+      <div class="game-content">
       <div class="flag-container">
         <div class="flag-wrapper" id="flag-wrapper">
           <img id="flag-img" src="" alt="Country flag">
@@ -126,6 +127,7 @@
       <div class="hard-mode-container" id="hard-mode-container" style="display: none;">
         <input type="text" id="answer-input" placeholder="Type country name..." autocomplete="off">
         <button class="btn primary" id="submit-answer">Submit</button>
+      </div>
       </div>
     </div>
 

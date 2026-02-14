@@ -289,8 +289,8 @@ function showResult(correct, xpGained, correctAnswer) {
   }
   setTimeout(() => {
     overlay.classList.remove('active', 'show-correct', 'show-wrong');
-    nextRound();
-  }, 1200);
+    requestAnimationFrame(() => nextRound());
+  }, 1000);
 }
 
 function updateMenuStats() {
