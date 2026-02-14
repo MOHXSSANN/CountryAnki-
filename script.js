@@ -1,11 +1,14 @@
 /**
- * Flag Master - Country Flag Spaced Repetition Game
+ * Mo Flag Knowledge - Country Flag Spaced Repetition Game
  * SM-2 algorithm, multiple game modes, full persistence
  */
 
 // ==================== Constants ====================
-const FLAG_CDN = 'https://flagcdn.com/w320';
-const FLAG_CDN_FALLBACK = 'https://flagcdn.com/256x192';
+const FLAG_CDNS = [
+  'https://flagcdn.com/w320',
+  'https://flagcdn.com/256x192',
+  'https://flagcdn.com/w160',
+];
 const STORAGE_KEYS = {
   cards: 'flagmaster_cards',
   stats: 'flagmaster_stats',
@@ -339,11 +342,18 @@ function renderRound() {
   const img = $('#flag-img');
   const code = country.code.toLowerCase();
   img.alt = `${country.name} flag`;
+  img.removeAttribute('style');
+  const state = { index: 0 };
   img.onerror = function() {
-    this.onerror = null;
-    this.src = `${FLAG_CDN_FALLBACK}/${code}.png`;
+    state.index++;
+    if (state.index < FLAG_CDNS.length) {
+      this.src = `${FLAG_CDNS[state.index]}/${code}.png`;
+    } else {
+      this.src = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="192"><rect fill="#21262d" width="320" height="192"/><text x="50%" y="50%" fill="#8b949e" font-size="14" text-anchor="middle" dy=".3em">${country.name}</text></svg>`);
+    }
   };
-  img.src = `${FLAG_CDN}/${code}.png`;
+  img.onload = function() { state.index = 0; };
+  img.src = `${FLAG_CDNS[0]}/${code}.png`;
 
   const wrapper = $('#flag-wrapper');
   wrapper.classList.remove('correct', 'wrong', 'flip-in');
