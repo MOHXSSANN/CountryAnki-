@@ -360,11 +360,13 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
+  margin-top: -8vh;
 }
 
 .flag-container {
   width: 100%;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  max-width: 480px;
 }
 
 .flag-wrapper {
@@ -380,7 +382,7 @@ body {
 }
 
 .flag-wrapper.flip-in {
-  animation: cardFlipIn 0.5s ease;
+  animation: cardFlipIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
 @keyframes cardFlipIn {
@@ -425,6 +427,7 @@ body {
   gap: 12px;
   width: 100%;
   max-width: 500px;
+  transition: var(--transition);
 }
 
 .option-btn {
@@ -437,12 +440,14 @@ body {
   font-size: 1rem;
   text-align: center;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.option-btn:hover {
+.option-btn:hover:not(:disabled) {
   border-color: var(--accent);
   background: var(--bg-elevated);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .option-btn.correct {
@@ -580,7 +585,11 @@ body {
   padding: 32px;
   border-radius: var(--radius-lg);
   text-align: center;
-  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#round-result {
+  transition: opacity 0.2s ease;
 }
 
 @keyframes popIn {
@@ -641,6 +650,49 @@ body {
 
 .complete-card h2 {
   margin-bottom: 12px;
+}
+
+/* Streak Milestone */
+.streak-milestone-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.streak-milestone-card {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  padding: 40px 60px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  animation: streakPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 60px rgba(245, 158, 11, 0.5);
+}
+
+@keyframes streakPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.streak-milestone-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 12px;
+  animation: streakFire 0.6s ease infinite alternate;
+}
+
+@keyframes streakFire {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
+.streak-milestone-card h2 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.streak-milestone-sub {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
 }
 
 .complete-stats {

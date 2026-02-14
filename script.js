@@ -14,6 +14,7 @@ const XP_BASE = 10;
 const XP_STREAK_BONUS = 5;
 const XP_PENALTY = -5;
 const LEVEL_XP = [0, 100, 250, 500, 850, 1300, 1850, 2500, 3250, 4100, 5050];
+const STREAK_MILESTONES = [5, 10, 20, 50, 100, 150];
 
 // ==================== State ====================
 let countries = [];
@@ -125,18 +126,23 @@ function getDueCount() {
 
 /**
  * Get similarity score between two countries (higher = more similar)
+ * Heavily favors similar flags (Indonesia/Poland, Chad/Romania, etc.)
  */
-function getSimilarityScore(a, b, correct) {
+function getSimilarityScore(a, b) {
   let score = 0;
-  if (a.continent === b.continent) score += 3;
-  const sharedColors = a.colors.filter((c) => b.colors.includes(c)).length;
-  score += sharedColors;
-  if (a.layout === b.layout) score += 2;
+  if (a.continent === b.continent) score += 2;
+  const aColors = new Set(a.colors.map((c) => c.toLowerCase()));
+  const bColors = new Set(b.colors.map((c) => c.toLowerCase()));
+  const sharedColors = [...aColors].filter((c) => bColors.has(c)).length;
+  score += sharedColors * 2;
+  // Same exact color set = very similar flags (Indonesia/Poland/Monaco, etc.)
+  if (aColors.size === bColors.size && sharedColors === aColors.size) score += 6;
+  if (a.layout === b.layout) score += 3;
   return score;
 }
 
 /**
- * Select 3 difficult distractors for multiple choice
+ * Select 3 difficult distractors - prioritizes similar flags (e.g. Indonesia + Poland)
  */
 function getDistractors(correctCountry, count = 3) {
   const others = countries.filter((c) => c.code !== correctCountry.code);
@@ -145,8 +151,9 @@ function getDistractors(correctCountry, count = 3) {
     score: getSimilarityScore(correctCountry, c),
   }));
   scored.sort((a, b) => b.score - a.score);
-  // Take from top similar, add some randomness
-  const pool = scored.slice(0, Math.min(20, scored.length));
+  // Strongly prefer top similar (e.g. Indonesia gets Poland, Monaco)
+  const topSimilar = scored.filter((s) => s.score >= 5);
+  const pool = topSimilar.length >= count ? topSimilar : scored.slice(0, 25);
   shuffleArray(pool);
   return pool.slice(0, count).map((s) => s.country);
 }
@@ -287,10 +294,12 @@ function showResult(correct, xpGained, correctAnswer) {
     overlay.classList.add('show-wrong');
     $('#wrong-answer').text(`Correct: ${correctAnswer}`);
   }
-  setTimeout(() => {
+  // Advance first (updates DOM with next question), then hide overlay to reveal it
+  const advance = () => {
+    nextRound();
     overlay.classList.remove('active', 'show-correct', 'show-wrong');
-    requestAnimationFrame(() => nextRound());
-  }, 1000);
+  };
+  setTimeout(advance, 850);
 }
 
 function updateMenuStats() {
@@ -458,7 +467,37 @@ function checkAnswer(selectedName) {
   }
 
   saveData();
-  showResult(isCorrect, xpGained > 0 ? xpGained : 0, correct);
+  if (isCorrect && STREAK_MILESTONES.includes(gameState.streak)) {
+    showStreakMilestone(gameState.streak, () => showResult(isCorrect, xpGained > 0 ? xpGained : 0, correct));
+  } else {
+    showResult(isCorrect, xpGained > 0 ? xpGained : 0, correct);
+  }
+}
+
+const STREAK_MESSAGES = {
+  5: 'On Fire!',
+  10: 'Unstoppable!',
+  20: 'Legendary!',
+  50: 'Master!',
+  100: 'Ultimate!',
+  150: 'Champion!',
+};
+
+function showStreakMilestone(streak, onComplete) {
+  const overlay = $('#streak-milestone');
+  const text = $('#streak-milestone-text');
+  const sub = $('#streak-milestone-sub');
+  if (!overlay || !text) {
+    onComplete();
+    return;
+  }
+  text.textContent = `${streak} Streak!`;
+  if (sub) sub.textContent = STREAK_MESSAGES[streak] || 'Amazing!';
+  overlay.classList.add('active');
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    onComplete();
+  }, 1100);
 }
 
 // ==================== Dashboard ====================
