@@ -5,6 +5,7 @@
 
 // ==================== Constants ====================
 const FLAG_CDN = 'https://flagcdn.com/w320';
+const FLAG_CDN_FALLBACK = 'https://flagcdn.com/256x192';
 const STORAGE_KEYS = {
   cards: 'flagmaster_cards',
   stats: 'flagmaster_stats',
@@ -192,7 +193,7 @@ function buildQueue() {
     const filtered = countries.filter((c) => c.continent === continent);
     return shuffleArray(filtered);
   }
-  // Normal & Hard: SRS
+  // Normal & Hard: SRS - include due cards + new cards (larger session)
   const due = countries.filter((c) => isDue(c.code));
   const newCards = countries.filter((c) => getCard(c.code).repetitions === 0);
   shuffleArray(due);
@@ -205,8 +206,8 @@ function buildQueue() {
       used.add(c.code);
     }
   }
-  const newPerSession = 5;
-  for (let i = 0; i < newPerSession && queue.length < 20; i++) {
+  const newPerSession = 15;
+  for (let i = 0; i < newPerSession && queue.length < 30; i++) {
     if (newCards[i] && !used.has(newCards[i].code)) {
       queue.push(newCards[i]);
       used.add(newCards[i].code);
@@ -283,23 +284,37 @@ function showScreen(id) {
   if (el) el.classList.add('active');
 }
 
-function showResult(correct, xpGained, correctAnswer) {
-  const overlay = $('#round-result');
-  overlay.classList.remove('show-correct', 'show-wrong');
-  overlay.classList.add('active');
-  if (correct) {
-    overlay.classList.add('show-correct');
-    $('#correct-xp').text(`+${xpGained} XP`);
-  } else {
-    overlay.classList.add('show-wrong');
-    $('#wrong-answer').text(`Correct: ${correctAnswer}`);
+/**
+ * In-place feedback: red border on wrong, green on correct. Show correct answer.
+ * After ~1s, invoke callback to advance.
+ */
+function showAnswerFeedback(isCorrect, correctAnswer, selectedName, onComplete) {
+  const wrapper = $('#flag-wrapper');
+  const optsContainer = $('#options-container');
+  const btns = optsContainer?.querySelectorAll('.option-btn');
+
+  if (btns) {
+    btns.forEach((btn, i) => {
+      if (gameState.options[i]?.name === correctAnswer) {
+        btn.classList.add('correct');
+      } else if (btn.textContent === selectedName && !isCorrect) {
+        btn.classList.add('wrong');
+      }
+    });
   }
-  // Advance first (updates DOM with next question), then hide overlay to reveal it
-  const advance = () => {
-    nextRound();
-    overlay.classList.remove('active', 'show-correct', 'show-wrong');
-  };
-  setTimeout(advance, 850);
+  wrapper.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  setTimeout(() => {
+    wrapper.classList.remove('correct', 'wrong');
+    if (btns) btns.forEach((b) => { b.classList.remove('correct', 'wrong'); b.disabled = false; });
+    const inp = $('#answer-input');
+    if (inp) inp.disabled = false;
+    onComplete();
+  }, 1000);
+}
+
+function advanceToNextQuestion() {
+  nextRound();
 }
 
 function updateMenuStats() {
@@ -322,8 +337,13 @@ function renderRound() {
   }
 
   const img = $('#flag-img');
-  img.src = `${FLAG_CDN}/${country.code.toLowerCase()}.png`;
+  const code = country.code.toLowerCase();
   img.alt = `${country.name} flag`;
+  img.onerror = function() {
+    this.onerror = null;
+    this.src = `${FLAG_CDN_FALLBACK}/${code}.png`;
+  };
+  img.src = `${FLAG_CDN}/${code}.png`;
 
   const wrapper = $('#flag-wrapper');
   wrapper.classList.remove('correct', 'wrong', 'flip-in');
@@ -419,6 +439,11 @@ function checkAnswer(selectedName) {
   if (gameState.answered) return;
   gameState.answered = true;
 
+  // Disable options during feedback
+  document.querySelectorAll('.option-btn').forEach((b) => (b.disabled = true));
+  const input = $('#answer-input');
+  if (input) input.disabled = true;
+
   const correct = gameState.currentCountry.name;
   const normalized = (s) => s.trim().toLowerCase().replace(/\s+/g, ' ');
   const isCorrect = fuzzyMatch(normalized(selectedName), normalized(correct));
@@ -443,35 +468,28 @@ function checkAnswer(selectedName) {
     xpGained = XP_BASE + (gameState.streak > 1 ? XP_STREAK_BONUS : 0);
     addXP(xpGained);
     gameState.score += xpGained;
-
-    if (currentMode !== 'hard') {
-      const idx = gameState.options.findIndex((o) => o.name === correct);
-      const btns = $('#options-container').querySelectorAll('.option-btn');
-      btns[idx]?.classList.add('correct');
-    }
-    $('#flag-wrapper').classList.add('correct');
   } else {
     stats.currentStreak = 0;
     gameState.streak = 0;
     addXP(XP_PENALTY);
     gameState.score += XP_PENALTY;
 
-    if (currentMode !== 'hard') {
-      const btns = $('#options-container').querySelectorAll('.option-btn');
-      btns.forEach((btn, i) => {
-        if (gameState.options[i].name === correct) btn.classList.add('correct');
-        else if (btn.textContent === selectedName) btn.classList.add('wrong');
-      });
+    // SRS: re-queue wrong answers in Study mode so user sees them again this session
+    if (currentMode === 'normal') {
+      gameState.queue.push(gameState.currentCountry);
     }
-    $('#flag-wrapper').classList.add('wrong');
   }
 
   saveData();
-  if (isCorrect && STREAK_MILESTONES.includes(gameState.streak)) {
-    showStreakMilestone(gameState.streak, () => showResult(isCorrect, xpGained > 0 ? xpGained : 0, correct));
-  } else {
-    showResult(isCorrect, xpGained > 0 ? xpGained : 0, correct);
-  }
+
+  // In-place feedback: show red/green on options for ~1s, then auto-advance
+  showAnswerFeedback(isCorrect, correct, selectedName, () => {
+    if (isCorrect && STREAK_MILESTONES.includes(gameState.streak)) {
+      showStreakMilestone(gameState.streak, () => advanceToNextQuestion());
+    } else {
+      advanceToNextQuestion();
+    }
+  });
 }
 
 const STREAK_MESSAGES = {
@@ -615,8 +633,12 @@ async function init() {
     }
   });
 
-  $('#game-back').addEventListener('click', () => {
+  $('#game-back').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (currentMode === 'timed') stopTimer();
+    document.querySelectorAll('.overlay').forEach((o) => o.classList.remove('active'));
+    $('#round-result').classList.remove('show-correct', 'show-wrong');
     updateMenuStats();
     showScreen('main-menu');
   });
