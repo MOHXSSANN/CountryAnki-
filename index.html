@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mo Flag Knowledge — Country Flag Spaced Repetition Game</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Main Menu -->
+    <div id="main-menu" class="screen active">
+      <div class="menu-bg"></div>
+      <header class="menu-header">
+        <h1 class="logo">
+          <span class="logo-icon">🏳️</span>
+          Mo Flag Knowledge
+        </h1>
+        <p class="tagline">Learn world flags with spaced repetition</p>
+      </header>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-level">1</span>
+          <span class="stat-label">Level</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-xp">0</span>
+          <span class="stat-label">XP</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-streak">0</span>
+          <span class="stat-label">Streak</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-due">0</span>
+          <span class="stat-label">Due</span>
+        </div>
+      </div>
+
+      <nav class="mode-select">
+        <button class="mode-btn primary" data-mode="normal">
+          <span class="mode-icon">📚</span>
+          <span class="mode-name">Study</span>
+          <span class="mode-desc">Spaced repetition</span>
+        </button>
+        <button class="mode-btn" data-mode="endless">
+          <span class="mode-icon">♾️</span>
+          <span class="mode-name">Endless</span>
+          <span class="mode-desc">Random practice</span>
+        </button>
+        <button class="mode-btn" data-mode="timed">
+          <span class="mode-icon">⏱️</span>
+          <span class="mode-name">Timed</span>
+          <span class="mode-desc">30 or 60 seconds</span>
+        </button>
+        <button class="mode-btn" data-mode="continent">
+          <span class="mode-icon">🌍</span>
+          <span class="mode-name">Continent</span>
+          <span class="mode-desc">Pick a region</span>
+        </button>
+        <button class="mode-btn" data-mode="hard">
+          <span class="mode-icon">🎯</span>
+          <span class="mode-name">Hard Mode</span>
+          <span class="mode-desc">Type the answer</span>
+        </button>
+      </nav>
+
+      <div class="menu-actions">
+        <button class="btn secondary" id="btn-dashboard">📊 Dashboard</button>
+        <button class="btn ghost" id="btn-settings">⚙️ Settings</button>
+      </div>
+    </div>
+
+    <!-- Continent Select (for Continent Mode) -->
+    <div id="continent-select" class="screen">
+      <button class="back-btn" data-back="main-menu">← Back</button>
+      <h2>Select Continent</h2>
+      <div class="continent-grid">
+        <button class="continent-btn" data-continent="Africa">🌍 Africa</button>
+        <button class="continent-btn" data-continent="Americas">🌎 Americas</button>
+        <button class="continent-btn" data-continent="Asia">🌏 Asia</button>
+        <button class="continent-btn" data-continent="Europe">🇪🇺 Europe</button>
+        <button class="continent-btn" data-continent="Oceania">🌊 Oceania</button>
+      </div>
+    </div>
+
+    <!-- Timed Mode Setup -->
+    <div id="timed-select" class="screen">
+      <button class="back-btn" data-back="main-menu">← Back</button>
+      <h2>Select Duration</h2>
+      <div class="timed-options">
+        <button class="timed-btn" data-seconds="30">30 seconds</button>
+        <button class="timed-btn" data-seconds="60">60 seconds</button>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+      <div class="game-header">
+        <button type="button" class="back-btn game-back-btn" id="game-back" aria-label="Close">✕</button>
+        <div class="game-stats">
+          <span class="game-stat" id="game-score">Score: 0</span>
+          <span class="game-stat" id="game-streak">Streak: 0</span>
+          <span class="game-stat" id="game-timer"></span>
+        </div>
+      </div>
+
+      <div class="game-content">
+      <div class="flag-container">
+        <div class="flag-wrapper" id="flag-wrapper">
+          <img id="flag-img" src="" alt="Country flag">
+        </div>
+      </div>
+
+      <div class="options-container" id="options-container">
+        <button class="option-btn" data-index="0"></button>
+        <button class="option-btn" data-index="1"></button>
+        <button class="option-btn" data-index="2"></button>
+        <button class="option-btn" data-index="3"></button>
+      </div>
+
+      <!-- Hard Mode Input -->
+      <div class="hard-mode-container" id="hard-mode-container" style="display: none;">
+        <input type="text" id="answer-input" placeholder="Type country name..." autocomplete="off">
+        <button class="btn primary" id="submit-answer">Submit</button>
+      </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="screen">
+      <button class="back-btn" data-back="main-menu">← Back</button>
+      <h2>Progress Dashboard</h2>
+      <div class="dashboard-stats">
+        <div class="dashboard-card">
+          <h3>Mastered</h3>
+          <p id="dash-mastered">0</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Learning</h3>
+          <p id="dash-learning">0</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Struggling</h3>
+          <p id="dash-struggling">0</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Longest Streak</h3>
+          <p id="dash-longest">0</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Accuracy</h3>
+          <p id="dash-accuracy">—</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Due Today</h3>
+          <p id="dash-due">0</p>
+        </div>
+      </div>
+      <div class="continent-heatmap">
+        <h3>By Continent</h3>
+        <div id="continent-stats"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="screen">
+      <button class="back-btn" data-back="main-menu">← Back</button>
+      <h2>Settings</h2>
+      <div class="settings-list">
+        <label class="setting-item">
+          <span>Sound effects</span>
+          <input type="checkbox" id="sound-toggle" checked>
+        </label>
+        <button class="btn danger" id="reset-progress">Reset All Progress</button>
+      </div>
+    </div>
+
+    <!-- Streak Milestone Overlay -->
+    <div id="streak-milestone" class="overlay streak-milestone-overlay">
+      <div class="streak-milestone-card">
+        <span class="streak-milestone-icon">🔥</span>
+        <h2 id="streak-milestone-text">5 Streak!</h2>
+        <p id="streak-milestone-sub" class="streak-milestone-sub">On Fire!</p>
+      </div>
+    </div>
+
+    <!-- Round Result Overlay -->
+    <div id="round-result" class="overlay">
+      <div class="result-card correct" id="result-correct">
+        <span class="result-icon">✓</span>
+        <h3>Correct!</h3>
+        <p id="correct-xp">+10 XP</p>
+      </div>
+      <div class="result-card wrong" id="result-wrong">
+        <span class="result-icon">✗</span>
+        <h3>Wrong!</h3>
+        <p id="wrong-answer"></p>
+      </div>
+    </div>
+
+    <!-- Victory / Complete Overlay -->
+    <div id="complete-overlay" class="overlay">
+      <div class="complete-card">
+        <h2 id="complete-title">Daily Goal Complete!</h2>
+        <p id="complete-message"></p>
+        <div class="complete-stats"></div>
+        <button class="btn primary" id="complete-continue">Continue</button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="overlay active">
+      <div class="loader">
+        <div class="loader-flag"></div>
+        <p>Loading flags...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
